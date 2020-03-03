@@ -185,8 +185,8 @@ u256 EVMInstructionInterpreter::eval(
 		return m_state.balance;
 	case Instruction::BALANCEMC:
 		return 0;
-    case Instruction::EMC:
-        return 0;
+	case Instruction::EMC:
+		return 0;
 	case Instruction::SELFBALANCE:
 		return m_state.selfbalance;
 	case Instruction::ORIGIN:

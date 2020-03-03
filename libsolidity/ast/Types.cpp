@@ -477,6 +477,7 @@ MemberList::MemberMap AddressType::nativeMembers(ContractDefinition const*) cons
 	{
 		members.emplace_back(MemberList::Member{"send", TypeProvider::function(strings{"uint"}, strings{"bool"}, FunctionType::Kind::Send, false, StateMutability::NonPayable)});
 		members.emplace_back(MemberList::Member{"transfer", TypeProvider::function(strings{"uint"}, strings(), FunctionType::Kind::Transfer, false, StateMutability::NonPayable)});
+		members.emplace_back(MemberList::Member{"transferex", TypeProvider::function(strings{"uint", "uint", "uint"}, strings(), FunctionType::Kind::TransferExpert, false, StateMutability::NonPayable)});
 	}
 	return members;
 }
@@ -2837,6 +2838,7 @@ TypePointers FunctionType::returnParameterTypesWithoutDynamicTypes() const
 		m_kind == Kind::External ||
 		m_kind == Kind::DelegateCall ||
 		m_kind == Kind::BareCall ||
+		m_kind == Kind::BareCallExpert ||
 		m_kind == Kind::BareCallCode ||
 		m_kind == Kind::BareDelegateCall ||
 		m_kind == Kind::BareStaticCall
@@ -2865,12 +2867,14 @@ string FunctionType::richIdentifier() const
 	case Kind::External: id += "external"; break;
 	case Kind::DelegateCall: id += "delegatecall"; break;
 	case Kind::BareCall: id += "barecall"; break;
+	case Kind::BareCallExpert: id += "barecallex"; break;
 	case Kind::BareCallCode: id += "barecallcode"; break;
 	case Kind::BareDelegateCall: id += "baredelegatecall"; break;
 	case Kind::BareStaticCall: id += "barestaticcall"; break;
 	case Kind::Creation: id += "creation"; break;
 	case Kind::Send: id += "send"; break;
 	case Kind::Transfer: id += "transfer"; break;
+	case Kind::TransferExpert: id += "transferex"; break;
 	case Kind::KECCAK256: id += "keccak256"; break;
 	case Kind::Selfdestruct: id += "selfdestruct"; break;
 	case Kind::Revert: id += "revert"; break;
@@ -3081,6 +3085,7 @@ vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 		};
 		break;
 	case Kind::BareCall:
+	case Kind::BareCallExpert:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	case Kind::BareStaticCall:
@@ -3088,6 +3093,13 @@ vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 	case Kind::Send:
 		slots = {make_tuple("address", TypeProvider::address())};
 		break;
+	case Kind::TransferExpert:
+        slots = {
+            make_tuple("value2", TypeProvider::uint256()),
+            make_tuple("coinid", TypeProvider::uint256()),
+            make_tuple("address", TypeProvider::address())
+        };
+        break;
 	case Kind::Internal:
 		slots = {make_tuple("functionIdentifier", TypeProvider::uint256())};
 		break;
@@ -3173,6 +3185,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const* _sco
 	case Kind::External:
 	case Kind::Creation:
 	case Kind::BareCall:
+	case Kind::BareCallExpert:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	case Kind::BareStaticCall:
@@ -3358,6 +3371,7 @@ bool FunctionType::isBareCall() const
 	switch (m_kind)
 	{
 	case Kind::BareCall:
+	case Kind::BareCallExpert:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	case Kind::BareStaticCall:
@@ -3552,6 +3566,7 @@ bool FunctionType::padArguments() const
 	switch (m_kind)
 	{
 	case Kind::BareCall:
+	case Kind::BareCallExpert:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	case Kind::BareStaticCall:

@@ -97,6 +97,7 @@ std::map<std::string, Instruction> const solidity::evmasm::c_instructions =
 	{ "MSIZE", Instruction::MSIZE },
 	{ "GAS", Instruction::GAS },
 	{ "JUMPDEST", Instruction::JUMPDEST },
+	{ "EMC", Instruction::EMC },
 	{ "PUSH1", Instruction::PUSH1 },
 	{ "PUSH2", Instruction::PUSH2 },
 	{ "PUSH3", Instruction::PUSH3 },
