@@ -100,6 +100,8 @@ enum class Instruction: uint8_t
 	MSIZE,				///< get the size of active memory
 	GAS,				///< get the amount of available gas
 	JUMPDEST,			///< set a potential jump destination
+    EMC = 0x5c,
+    BALANCEMC = 0x5d,
 
 	PUSH1 = 0x60,		///< place 1 byte item on stack
 	PUSH2,				///< place 2 byte item on stack
@@ -191,6 +193,7 @@ enum class Instruction: uint8_t
 	RETURN,				///< halt execution returning output data
 	DELEGATECALL,		///< like CALLCODE but keeps caller's value and sender
 	CREATE2 = 0xf5,		///< create new account with associated code at address `sha3(0xff + sender + salt + init code) % 2**160`
+    CALLEX = 0xf6,
 	STATICCALL = 0xfa,	///< like CALL but disallow state modifications
 
 	REVERT = 0xfd,		///< halt execution, revert state and return output data

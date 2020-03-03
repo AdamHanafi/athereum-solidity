@@ -183,6 +183,10 @@ u256 EVMInstructionInterpreter::eval(
 		return m_state.address;
 	case Instruction::BALANCE:
 		return m_state.balance;
+	case Instruction::BALANCEMC:
+		return 0;
+    case Instruction::EMC:
+        return 0;
 	case Instruction::SELFBALANCE:
 		return m_state.selfbalance;
 	case Instruction::ORIGIN:
@@ -305,6 +309,11 @@ u256 EVMInstructionInterpreter::eval(
 		accessMemory(arg[2], arg[3]);
 		logTrace(_instruction, arg);
 		return 0xdddddd + arg[1];
+	case Instruction::CALLEX:
+		accessMemory(arg[3], arg[6]);
+		accessMemory(arg[7], arg[8]);
+		logTrace(_instruction, arg);
+		return arg[0] & 1;
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 		// TODO assign returndata

@@ -185,6 +185,7 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 	switch (_item.instruction())
 	{
 	case Instruction::CALL:
+	case Instruction::CALLEX:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
@@ -194,6 +195,7 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 	case Instruction::PC:
 	case Instruction::MSIZE: // depends on previous writes and reads, not only on content
 	case Instruction::BALANCE: // depends on previous calls
+	case Instruction::BALANCEMC: // depends on previous calls
 	case Instruction::SELFBALANCE: // depends on previous calls
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODEHASH:
@@ -217,6 +219,7 @@ bool SemanticInformation::movable(Instruction _instruction)
 	{
 	case Instruction::KECCAK256:
 	case Instruction::BALANCE:
+	case Instruction::BALANCEMC:
 	case Instruction::SELFBALANCE:
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODEHASH:
@@ -259,6 +262,7 @@ bool SemanticInformation::invalidatesMemory(Instruction _instruction)
 	case Instruction::MSTORE:
 	case Instruction::MSTORE8:
 	case Instruction::CALL:
+	case Instruction::CALLEX:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
@@ -273,6 +277,7 @@ bool SemanticInformation::invalidatesStorage(Instruction _instruction)
 	switch (_instruction)
 	{
 	case Instruction::CALL:
+	case Instruction::CALLEX:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
 	case Instruction::CREATE:
@@ -291,6 +296,7 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::ADDRESS:
 	case Instruction::SELFBALANCE:
 	case Instruction::BALANCE:
+	case Instruction::BALANCEMC:
 	case Instruction::ORIGIN:
 	case Instruction::CALLER:
 	case Instruction::CALLVALUE:
@@ -328,6 +334,7 @@ bool SemanticInformation::invalidInViewFunctions(Instruction _instruction)
 	case Instruction::LOG4:
 	case Instruction::CREATE:
 	case Instruction::CALL:
+	case Instruction::CALLEX:
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
 	case Instruction::CREATE2:
