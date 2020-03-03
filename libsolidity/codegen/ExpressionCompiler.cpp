@@ -622,6 +622,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
 			break;
 		}
+		case FunctionType::Kind::BareCallExpert:
+        assert(0);
 		case FunctionType::Kind::BareCall:
 		case FunctionType::Kind::BareDelegateCall:
 		case FunctionType::Kind::BareStaticCall:
