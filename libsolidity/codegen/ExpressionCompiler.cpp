@@ -622,8 +622,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context.adjustStackOffset(static_cast<int>(returnParametersSize - parameterSize) - 1);
 			break;
 		}
-		case FunctionType::Kind::BareCallExpert:
-        assert(0);
 		case FunctionType::Kind::BareCall:
 		case FunctionType::Kind::BareDelegateCall:
 		case FunctionType::Kind::BareStaticCall:
@@ -725,8 +723,14 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case FunctionType::Kind::Send:
 		case FunctionType::Kind::Transfer:
-		case FunctionType::Kind::TransferExpert:
+		case FunctionType::Kind::TransferExpert: {
+            auto funKind = function.kind();
 			_functionCall.expression().accept(*this);
+            if (funKind == FunctionType::Kind::TransferExpert)
+            {
+                for (unsigned arg = 2; arg > 0; --arg)
+				acceptAndConvert(*arguments[arg], *function.parameterTypes()[arg], true);
+            }
 			// Provide the gas stipend manually at first because we may send zero ether.
 			// Will be zeroed if we send more than zero ether.
 			m_context << u256(evmasm::GasCosts::callStipend);
@@ -740,9 +744,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					TypePointers{},
 					strings(),
 					strings(),
-					function.kind() == FunctionType::Kind::TransferExpert ?
-                        FunctionType::Kind::BareCallExpert :
-                        FunctionType::Kind::BareCall,
+                    FunctionType::Kind::BareCall,
 					false,
 					StateMutability::NonPayable,
 					nullptr,
@@ -750,9 +752,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					true
 				),
 				{},
-				false
+				false,
+				funKind == FunctionType::Kind::TransferExpert
 			);
-			if (function.kind() == FunctionType::Kind::Transfer)
+			if (funKind == FunctionType::Kind::Transfer ||
+                funKind == FunctionType::Kind::TransferExpert)
 			{
 				// Check if zero (out of stack or not enough balance).
 				m_context << Instruction::ISZERO;
@@ -760,6 +764,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context.appendConditionalRevert(true);
 			}
 			break;
+        }
 		case FunctionType::Kind::Selfdestruct:
 			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), true);
 			m_context << Instruction::SELFDESTRUCT;
@@ -1359,6 +1364,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				case FunctionType::Kind::BareDelegateCall:
 				case FunctionType::Kind::BareStaticCall:
 				case FunctionType::Kind::Transfer:
+				case FunctionType::Kind::TransferExpert:
 				case FunctionType::Kind::Log0:
 				case FunctionType::Kind::Log1:
 				case FunctionType::Kind::Log2:
@@ -2178,7 +2184,8 @@ void ExpressionCompiler::appendShiftOperatorCode(Token _operator, Type const& _v
 void ExpressionCompiler::appendExternalFunctionCall(
 	FunctionType const& _functionType,
 	vector<ASTPointer<Expression const>> const& _arguments,
-	bool _tryCall
+	bool _tryCall,
+    bool isExpert
 )
 {
 	solAssert(
@@ -2196,19 +2203,18 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	unsigned selfSize = _functionType.bound() ? _functionType.selfType()->sizeOnStack() : 0;
 	unsigned gasValueSize = (_functionType.gasSet() ? 1u : 0u) + (_functionType.valueSet() ? 1u : 0u);
-    unsigned contractSize = 1 + gasValueSize + selfSize + (_functionType.isBareCall() ? 0 : 1);
-	unsigned contractStackPos = m_context.currentToBaseStackOffset(contractSize);
+	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + selfSize + (_functionType.isBareCall() ? 0 : 1) + (isExpert ? 2 : 0));
 	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
 	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
 
-	auto funKind = _functionType.kind();
-    bool isExpert = funKind == FunctionType::Kind::BareCallExpert;
-    unsigned coinIDStackPos = m_context.currentToBaseStackOffset(contractSize + 1);
-    unsigned value2StackPos = m_context.currentToBaseStackOffset(contractSize + 2);
+    unsigned coinIDStackPos = m_context.currentToBaseStackOffset(gasValueSize + 1);
+    unsigned value2StackPos = m_context.currentToBaseStackOffset(gasValueSize + 2);
 
 	// move self object to top
 	if (_functionType.bound())
 		utils().moveToStackTop(gasValueSize, _functionType.selfType()->sizeOnStack());
+
+	auto funKind = _functionType.kind();
 
 	solAssert(funKind != FunctionType::Kind::BareStaticCall || m_context.evmVersion().hasStaticCall(), "");
 
@@ -2384,6 +2390,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
     }
 
 	unsigned remainsSize =
+        (isExpert ? 2 : 0) +
 		2u + // contract address, input_memory_end
 		(_functionType.valueSet() ? 1 : 0) +
 		(_functionType.gasSet() ? 1 : 0) +

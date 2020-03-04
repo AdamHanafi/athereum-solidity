@@ -2838,7 +2838,6 @@ TypePointers FunctionType::returnParameterTypesWithoutDynamicTypes() const
 		m_kind == Kind::External ||
 		m_kind == Kind::DelegateCall ||
 		m_kind == Kind::BareCall ||
-		m_kind == Kind::BareCallExpert ||
 		m_kind == Kind::BareCallCode ||
 		m_kind == Kind::BareDelegateCall ||
 		m_kind == Kind::BareStaticCall
@@ -2867,7 +2866,6 @@ string FunctionType::richIdentifier() const
 	case Kind::External: id += "external"; break;
 	case Kind::DelegateCall: id += "delegatecall"; break;
 	case Kind::BareCall: id += "barecall"; break;
-	case Kind::BareCallExpert: id += "barecallex"; break;
 	case Kind::BareCallCode: id += "barecallcode"; break;
 	case Kind::BareDelegateCall: id += "baredelegatecall"; break;
 	case Kind::BareStaticCall: id += "barestaticcall"; break;
@@ -3085,7 +3083,6 @@ vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 		};
 		break;
 	case Kind::BareCall:
-	case Kind::BareCallExpert:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	case Kind::BareStaticCall:
@@ -3185,7 +3182,6 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const* _sco
 	case Kind::External:
 	case Kind::Creation:
 	case Kind::BareCall:
-	case Kind::BareCallExpert:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	case Kind::BareStaticCall:
@@ -3371,7 +3367,6 @@ bool FunctionType::isBareCall() const
 	switch (m_kind)
 	{
 	case Kind::BareCall:
-	case Kind::BareCallExpert:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	case Kind::BareStaticCall:
@@ -3566,7 +3561,6 @@ bool FunctionType::padArguments() const
 	switch (m_kind)
 	{
 	case Kind::BareCall:
-	case Kind::BareCallExpert:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	case Kind::BareStaticCall:
