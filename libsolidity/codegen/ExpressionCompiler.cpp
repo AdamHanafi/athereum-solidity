@@ -2367,13 +2367,21 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			gasNeededByCaller += evmasm::GasCosts::callNewAccountGas; // we never know
 		m_context << gasNeededByCaller << Instruction::GAS << Instruction::SUB;
 	}
-	// Order is important here, STATICCALL might overlap with DELEGATECALL.
-	if (isDelegateCall)
-		m_context << Instruction::DELEGATECALL;
-	else if (useStaticCall)
-		m_context << Instruction::STATICCALL;
-	else
-		m_context << Instruction::CALL;
+
+    if (!isExpert)
+    {
+	    // Order is important here, STATICCALL might overlap with DELEGATECALL.
+	    if (isDelegateCall)
+	    	m_context << Instruction::DELEGATECALL;
+	    else if (useStaticCall)
+	    	m_context << Instruction::STATICCALL;
+	    else
+	    	m_context << Instruction::CALL;
+    }
+    else
+    {
+        m_context << Instruction::CALLEX;
+    }
 
 	unsigned remainsSize =
 		2u + // contract address, input_memory_end
