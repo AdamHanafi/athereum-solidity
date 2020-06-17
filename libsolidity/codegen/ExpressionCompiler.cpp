@@ -724,13 +724,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::Send:
 		case FunctionType::Kind::Transfer:
 		case FunctionType::Kind::TransferExpert: {
-            auto funKind = function.kind();
+			auto funKind = function.kind();
 			_functionCall.expression().accept(*this);
-            if (funKind == FunctionType::Kind::TransferExpert)
-            {
-                for (unsigned arg = 2; arg > 0; --arg)
+			if (funKind == FunctionType::Kind::TransferExpert)
+			{
+				for (unsigned arg = 2; arg > 0; --arg)
 				acceptAndConvert(*arguments[arg], *function.parameterTypes()[arg], true);
-            }
+			}
 			// Provide the gas stipend manually at first because we may send zero ether.
 			// Will be zeroed if we send more than zero ether.
 			m_context << u256(evmasm::GasCosts::callStipend);
@@ -744,7 +744,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					TypePointers{},
 					strings(),
 					strings(),
-                    FunctionType::Kind::BareCall,
+					FunctionType::Kind::BareCall,
 					false,
 					StateMutability::NonPayable,
 					nullptr,
@@ -756,7 +756,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				funKind == FunctionType::Kind::TransferExpert
 			);
 			if (funKind == FunctionType::Kind::Transfer ||
-                funKind == FunctionType::Kind::TransferExpert)
+				funKind == FunctionType::Kind::TransferExpert)
 			{
 				// Check if zero (out of stack or not enough balance).
 				m_context << Instruction::ISZERO;
@@ -764,7 +764,15 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context.appendConditionalRevert(true);
 			}
 			break;
-        }
+		}
+		case FunctionType::Kind::BalanceMC:
+			_functionCall.expression().accept(*this);
+			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), true);
+			m_context << Instruction::BALANCEMC;
+			break;
+		case FunctionType::Kind::EnableMC:
+			m_context << Instruction::EMC;
+			break;
 		case FunctionType::Kind::Selfdestruct:
 			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), true);
 			m_context << Instruction::SELFDESTRUCT;
@@ -1496,6 +1504,14 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			);
 			m_context << Instruction::BALANCE;
 		}
+		else if (member == "balancemc")
+		{
+			utils().convertType(
+				*_memberAccess.expression().annotation().type,
+				*TypeProvider::address(),
+				true
+			);
+		}
 		else if ((set<string>{"send", "transfer", "transferex"}).count(member))
 		{
 			solAssert(dynamic_cast<AddressType const&>(*_memberAccess.expression().annotation().type).stateMutability() == StateMutability::Payable, "");
@@ -2185,7 +2201,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	FunctionType const& _functionType,
 	vector<ASTPointer<Expression const>> const& _arguments,
 	bool _tryCall,
-    bool isExpert
+	bool isExpert
 )
 {
 	solAssert(
@@ -2207,8 +2223,8 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
 	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
 
-    unsigned coinIDStackPos = m_context.currentToBaseStackOffset(gasValueSize + 1);
-    unsigned value2StackPos = m_context.currentToBaseStackOffset(gasValueSize + 2);
+	unsigned coinIDStackPos = m_context.currentToBaseStackOffset(gasValueSize + 1);
+	unsigned value2StackPos = m_context.currentToBaseStackOffset(gasValueSize + 2);
 
 	// move self object to top
 	if (_functionType.bound())
@@ -2332,12 +2348,12 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	// CALL arguments: outSize, outOff, inSize, inOff (already present up to here)
 	// [value,] addr, gas (stack top)
-    if (isExpert)
-    {
+	if (isExpert)
+	{
 		m_context
-            << dupInstruction(m_context.baseToCurrentStackOffset(value2StackPos))
-            << dupInstruction(m_context.baseToCurrentStackOffset(coinIDStackPos));
-    }
+			<< dupInstruction(m_context.baseToCurrentStackOffset(value2StackPos))
+			<< dupInstruction(m_context.baseToCurrentStackOffset(coinIDStackPos));
+	}
 	if (isDelegateCall)
 		solAssert(!_functionType.valueSet(), "Value set for delegatecall");
 	else if (useStaticCall)
@@ -2374,23 +2390,23 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << gasNeededByCaller << Instruction::GAS << Instruction::SUB;
 	}
 
-    if (!isExpert)
-    {
-	    // Order is important here, STATICCALL might overlap with DELEGATECALL.
-	    if (isDelegateCall)
-	    	m_context << Instruction::DELEGATECALL;
-	    else if (useStaticCall)
-	    	m_context << Instruction::STATICCALL;
-	    else
-	    	m_context << Instruction::CALL;
-    }
-    else
-    {
-        m_context << Instruction::CALLEX;
-    }
+	if (!isExpert)
+	{
+		// Order is important here, STATICCALL might overlap with DELEGATECALL.
+		if (isDelegateCall)
+			m_context << Instruction::DELEGATECALL;
+		else if (useStaticCall)
+			m_context << Instruction::STATICCALL;
+		else
+			m_context << Instruction::CALL;
+	}
+	else
+	{
+		m_context << Instruction::CALLEX;
+	}
 
 	unsigned remainsSize =
-        (isExpert ? 2 : 0) +
+		(isExpert ? 2 : 0) +
 		2u + // contract address, input_memory_end
 		(_functionType.valueSet() ? 1 : 0) +
 		(_functionType.gasSet() ? 1 : 0) +

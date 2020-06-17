@@ -74,7 +74,6 @@ public:
 		m_context(_context), stackHeight(m_context.stackHeight()) {}
 	void check()
 	{
-        return;
 		solAssert(
 			m_context.stackHeight() == stackHeight,
 			std::string("I sense a disturbance in the stack: ") + to_string(m_context.stackHeight()) + " vs " + to_string(stackHeight)

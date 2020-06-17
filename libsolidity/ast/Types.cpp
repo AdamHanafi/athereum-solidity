@@ -468,6 +468,7 @@ MemberList::MemberMap AddressType::nativeMembers(ContractDefinition const*) cons
 {
 	MemberList::MemberMap members = {
 		{"balance", TypeProvider::uint256()},
+		{"balancemc", TypeProvider::function(strings{"uint"}, strings{"uint"}, FunctionType::Kind::BalanceMC, false, StateMutability::View)},
 		{"call", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCall, false, StateMutability::Payable)},
 		{"callcode", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCallCode, false, StateMutability::Payable)},
 		{"delegatecall", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareDelegateCall, false, StateMutability::NonPayable)},
@@ -2873,6 +2874,8 @@ string FunctionType::richIdentifier() const
 	case Kind::Send: id += "send"; break;
 	case Kind::Transfer: id += "transfer"; break;
 	case Kind::TransferExpert: id += "transferex"; break;
+	case Kind::BalanceMC: id += "balancemc"; break;
+	case Kind::EnableMC: id += "enablemc"; break;
 	case Kind::KECCAK256: id += "keccak256"; break;
 	case Kind::Selfdestruct: id += "selfdestruct"; break;
 	case Kind::Revert: id += "revert"; break;
@@ -3096,6 +3099,9 @@ vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
             make_tuple("coinid", TypeProvider::uint256()),
             make_tuple("address", TypeProvider::address())
         };
+        break;
+    case Kind::BalanceMC:
+		slots = {make_tuple("coinid", TypeProvider::address())};
         break;
 	case Kind::Internal:
 		slots = {make_tuple("functionIdentifier", TypeProvider::uint256())};

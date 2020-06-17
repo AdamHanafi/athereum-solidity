@@ -1072,11 +1072,13 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	case FunctionType::Kind::GasLeft:
 	case FunctionType::Kind::Selfdestruct:
 	case FunctionType::Kind::BlockHash:
+	case FunctionType::Kind::EnableMC:
 	{
 		static map<FunctionType::Kind, string> functions = {
 			{FunctionType::Kind::GasLeft, "gas"},
 			{FunctionType::Kind::Selfdestruct, "selfdestruct"},
 			{FunctionType::Kind::BlockHash, "blockhash"},
+			{FunctionType::Kind::EnableMC, "enablemc"},
 		};
 		solAssert(functions.find(functionType->kind()) != functions.end(), "");
 
@@ -1342,6 +1344,8 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				"balance(" <<
 				expressionAsType(_memberAccess.expression(), *TypeProvider::address()) <<
 				")\n";
+        else if (member == "balancemc")
+			define(IRVariable{_memberAccess}.part("address"), _memberAccess.expression());
 		else if (set<string>{"send", "transfer", "transferex"}.count(member))
 		{
 			solAssert(dynamic_cast<AddressType const&>(*_memberAccess.expression().annotation().type).stateMutability() == StateMutability::Payable, "");

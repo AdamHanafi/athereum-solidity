@@ -1083,6 +1083,8 @@ public:
 		Send, ///< CALL, but without data and gas
 		Transfer, ///< CALL, but without data and throws on error
 		TransferExpert, ///< CALL, but without data and throws on error
+		BalanceMC,
+		EnableMC,
 		KECCAK256, ///< KECCAK256
 		Selfdestruct, ///< SELFDESTRUCT
 		Revert, ///< REVERT

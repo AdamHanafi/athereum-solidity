@@ -2629,7 +2629,6 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					return { 6005_error, errorMsg + " Did you intend to call the function?" };
 			}
 			else if (exprType->category() == Type::Category::Contract)
-			if (memberName == "send" || memberName == "transfer" || memberName == "transferex")
 			{
 				for (MemberList::Member const& addressMember: TypeProvider::payableAddress()->nativeMembers(nullptr))
 					if (addressMember.name == memberName)
