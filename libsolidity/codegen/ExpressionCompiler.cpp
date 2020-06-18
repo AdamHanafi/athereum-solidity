@@ -768,7 +768,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::BalanceMC:
 			_functionCall.expression().accept(*this);
 			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), true);
-			m_context << Instruction::BALANCEMC;
+			m_context << Instruction::SWAP1 << Instruction::BALANCEMC;
 			break;
 		case FunctionType::Kind::EnableMC:
 			m_context << Instruction::EMC;
